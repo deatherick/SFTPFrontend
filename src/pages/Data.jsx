@@ -1,9 +1,10 @@
 import { Line, Pie } from '@ant-design/charts';
-import { Card, Divider, Flex, Table } from 'antd';
+import { Card, Divider, Flex, Input, Table } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { requestGetData, requestGetFiles } from '../stores/authReducer';
 import dayjs from 'dayjs';
+import { SearchOutlined } from '@ant-design/icons';
 
 const columns = [
     {
@@ -41,6 +42,18 @@ const Data = () => {
     const dispatch = useDispatch();
     const { files, data } = useSelector((state) => state.auth);
     const [dataSource, setDataSource] = useState(initialData);
+    const [searchedVal, setSearchedVal] = useState("");
+
+    const filteredFiles =
+        searchedVal != null && searchedVal.length > 3
+            ? files?.filter((file) => {
+                return (
+                    file.file
+                        .toLowerCase()
+                        .includes(searchedVal.toLowerCase())
+                );
+            })
+            : files;
 
     useEffect(() => {
         dispatch(requestGetFiles());
@@ -60,10 +73,21 @@ const Data = () => {
 
     }, [data]);
 
+    const handleSearch = (event) => {
+        setSearchedVal(event.target.value);
+    };
+
     return (
         <Flex style={{ width: "100vh" }} vertical>
             <h1>Dashboard</h1>
-            <Table dataSource={files} columns={columns} rowKey="id" />
+            <Input
+                style={{ flex: 1 }}
+                allowClear
+                onChange={(event) => handleSearch(event)}
+                placeholder={"Search..."}
+                prefix={<SearchOutlined />}
+            />
+            <Table dataSource={filteredFiles} columns={columns} rowKey="id" />
             <Divider />
             <Card title="Line Chart">
                 <Line data={dataSource} xField={'age'} yField={'value'} />
